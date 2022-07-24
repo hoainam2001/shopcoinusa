@@ -17,9 +17,5 @@ mongoose.connect(process.env.mongodb)
 
 app.use("/api/outapi/", userRouter)
 
-app.get('/', function (req, res) {
-  res.render('register')
-})
-
 let port = process.env.PORT
 app.listen(port, () => console.log("http://localhost:"+port))
