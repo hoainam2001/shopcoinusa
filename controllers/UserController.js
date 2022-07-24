@@ -1,79 +1,47 @@
 const User = require('../models/user')
-const Deposit = require('../models/deposit')
+const History = require('../models/history')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
+const {validationResult} = require('express-validator')
 
-// for order recharge
-function rechargeOnHold(req, res, code, status){
-    const depositRecharge = new Deposit({
-        code : code,
-        status : status,
-    })
+// support function
+// for order deposit
+function historyService(req, res, code, status){
+    // let time = new Date()
+    // `${time.getFullYear()}/${time.getMonth()}/${time.getDate()} - ${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}`
+    let date = new Date()
 
-    depositRecharge.save()
-    .then(his => {
-        return res.json(his)
-    })
-    .catch(err => {
-        return res.json({code: 1, message: err.message})
-    })
-    
-}
-
-function rechargeComplete(req, res, code, status){
-    let time = new Date()
-    let date = `${time.getFullYear()}/${time.getMonth()}/${time.getDate()} - 
-    ${time.getHours()} : ${time.getMinutes} : ${time.getSeconds()}`
-    const depositRecharge = new Deposit({
-        code : code,
-        status : status,
-        updateAt : date
-    })
-
-    depositRecharge.save()
-    .then(his => {
-        return res.json(his)
-    })
-    .catch(err => {
-        return res.json({code: 1, message: err.message})
-    })
-}
-
-function rechargeConfirm(req, res, code, status){
-    let time = new Date()
-    let date = `${time.getFullYear()}/${time.getMonth()}/${time.getDate()} - 
-    ${time.getHours()} : ${time.getMinutes} : ${time.getSeconds()}`
-    const depositRecharge = new Deposit({
-        code : code,
-        status : status,
-        updateAt : date
-    })
-
-    depositRecharge.save()
-    .then(his => {
-        return res.json(his)
-    })
-    .catch(err => {
-        return res.json({code: 1, message: err.message})
-    })
-}
-
-function rechargeCancel(req, res, code, status){
-    let time = new Date()
-    let date = `${time.getFullYear()}/${time.getMonth()}/${time.getDate()} - 
-    ${time.getHours()} : ${time.getMinutes} : ${time.getSeconds()}`
-    const depositRecharge = new Deposit({
-        code : code,
-        status : status,
-        updateAt : date
-    })
-
-    depositRecharge.save()
-    .then(his => {
-        return res.json(his)
-    })
-    .catch(err => {
-        return res.json({code: 1, message: err.message})
+    History.findOne({code : code}, (err, dep) => {
+        if(err){
+            return res.json(err.message)
+        }
+        if(!dep){
+            const depositRecharge = new History({
+                code : code,
+                status : status,
+                createAt : date,
+                updateAt : date
+            })
+        
+            depositRecharge.save()
+            .then(his => {
+                return res.json(his)
+            })
+            .catch(err => {
+                return res.json({code: 1, message: err.message})
+            })
+        }else{
+            dep.updateAt = date
+            dep.status = status
+            dep.save()
+            .then(his => {
+                return res.json(his)
+            })
+            .catch(err => {
+                return res.json({code: 1, message: err.message})
+            })
+            
+        }
     })
 }
 
@@ -81,90 +49,128 @@ class UserController{
 
     // [GET] /api/outapi/sign-up
     signUp(req, res){
-        const {username, email, password} = req.query
-        
-        User.findOne({email: email}, (err, user) => {
-            if(err){
-                return res.json({code: 1, message: err.message})
-            }
-            else if(user){
-                return res.json({code: 2, message: "Email is exists"})
-            }else{
-                User.findOne({username: username}, (e, u) => {
-                    if(e){
-                        return res.json({code: 1, message: e.message})
-                    }
-                    else if(u){
-                        return res.json({code: 2, message: "Username is exists"})
-                    }
-                    else{
-                        bcrypt.hash(password, 10)
-                        .then(hashed => {
-                            const newUser = new User({
-                                email: email,
-                                username: username,
-                                password: hashed,
-                            })
 
-                            const token = jwt.sign(
-                                { user_id: newUser._id, email },
-                                process.env.JWT_SECRET,
-                                {
-                                  expiresIn: "1h",
-                                }
-                            )
-                            // save user token
-                            newUser.token = token;
-                            newUser.save()
-                            .then(person => {
-                                return res.json({code: 1, data: person})
+        let result = validationResult(req)
+        if(result.errors.length === 0){
+            const {username, email, password} = req.query
+        
+            User.findOne({email: email}, (err, user) => {
+                if(err){
+                    return res.json({code: 1, message: err.message})
+                }
+                else if(user){
+                    return res.json({code: 2, message: "Email is exists"})
+                }else{
+                    User.findOne({username: username}, (e, u) => {
+                        if(e){
+                            return res.json({code: 1, message: e.message})
+                        }
+                        else if(u){
+                            return res.json({code: 2, message: "Username is exists"})
+                        }
+                        else{
+                            bcrypt.hash(password, 10)
+                            .then(hashed => {
+                                const newUser = new User({
+                                    email: email,
+                                    username: username,
+                                    password: hashed,
+                                })
+
+                                const token = jwt.sign(
+                                    { user_id: newUser._id, email },
+                                    process.env.JWT_SECRET,
+                                    {
+                                    expiresIn: "1h",
+                                    }
+                                )
+                                // save user token
+                                newUser.token = token;
+                                newUser.save()
+                                .then(person => {
+                                    return res.json({code: 1, data: person})
+                                })
+                                .catch(err => console.log(err.message))
                             })
-                            .catch(err => console.log(err.message))
-                        })
-                    }
-                })
+                        }
+                    })
+                }
+        
+            })
+        }else{
+            let messages = result.mapped()
+            let message = ''
+            for(let m in messages){
+                message = messages[m]
+                break
             }
-    
-        })
+            return res.json({code: 1, message: message.msg})
+        }
+        
     }
 
     // [GET] /api/outapi/sign-in
-    signIn(req, res){
-        const {email, password} = req.query
-        User.findOne({email: email}, (err, person) => {
-            if(err){
-                return res.json(err.message)        
-            }
-            else if(!person){
-                return res.json("Email is not exists")
-            }
-            else{
-                let pwd = person.password
-                bcrypt.compare(password, pwd)
-                .then(match => {
-                    if(!match){
-                        return res.json("Password is not true")
-                    }
-                    const token = jwt.sign(
-                        { user_id: person._id, email },
-                        process.env.JWT_SECRET,
-                        {
-                          expiresIn: "1h",
+    signIn(req, res){       
+        let result = validationResult(req)
+        if(result.errors.length === 0){
+            const {email, password} = req.query
+            User.findOne({email: email}, (err, person) => {
+                if(err){
+                    return res.json(err.message)        
+                }
+                else if(!person){
+                    return res.json("Email is not exists")
+                }
+                else{
+                    let pwd = person.password
+                    bcrypt.compare(password, pwd)
+                    .then(match => {
+                        if(!match){
+                            return res.json("Password is not true")
                         }
-                    )
-                    // save user token
-                    person.token = token
-                    return res.json(person)
-                })
-                .catch(err => {
-                    return res.json(err.message)
-                })
+                        const token = jwt.sign(
+                            { user_id: person._id, email },
+                            process.env.JWT_SECRET,
+                            {
+                            expiresIn: "1h",
+                            }
+                        )
+                        // save user token
+                        person.token = token
+                        return res.json(person)
+                    })
+                    .catch(err => {
+                        return res.json(err.message)
+                    })
+                }
+            })
+        }else{
+            let messages = result.mapped()
+            let message = ''
+            for(let m in messages){
+                message = messages[m]
+                break
             }
-        })
+            return res.json({code: 1, message: message.msg})
+        }
     }
 
     // [POST] /api/outapi/settypeaccount
     settypeaccount(req, res){
+
+        let result = validationResult(req)
+        if(result.errors.length === 0){
+
+        }else{
+            let messages = result.mapped()
+            let message = ''
+            for(let m in messages){
+                message = messages[m]
+                break
+            }
+            return res.json({code: 1, message: message.msg})
+        }
+
         const {token, admin, user, status} = req.body
         const query = {'email': user};
         User.findOne(query, (err, person) => {
@@ -184,24 +190,66 @@ class UserController{
         })
     }
 
-    // [GET] /api/outapi/deposit/recharge
-    recharge(req, res){
-        const {token, admin, code, status} = req.params
+    // [GET] /api/outapi/deposit/
+    deposit(req, res){
 
-        if(!(token || admin || code || status)){
-            return res.json("Paramater is shortage !!!!")
+        let result = validationResult(req)
+        if(result.errors.length === 0){
+            const {token, admin, code, status} = req.query
+        
+            if(status == "onhold"){
+                historyService(req, res, code, status)
+            }else if(status == "complete"){
+                historyService(req, res, code, status)
+            }else if(status == "confirm"){
+                historyService(req, res, code, status)
+            }else if(status == "cancel"){
+                historyService(req, res, code, status)
+            }else{
+                return res.json({code: 3, message: "This method is not support"})
+            }
+        }else{
+            let messages = result.mapped()
+            let message = ''
+            for(let m in messages){
+                message = messages[m]
+                break
+            }
+            return res.json({code: 1, message: message.msg})
         }
 
-        if(status == "On Hold"){
-            rechargeOnHold(req, res, code, status)
-        }else if(status == "Complete"){
-            rechargeComplete(req, res, code, status)
-        }else if(status == "Confirm"){
-            rechargeConfirm(req, res, code, status)
+        
+    }
+
+    // [GET] /api/outapi/withdraw/
+    withdraw(req, res){
+
+        let result = validationResult(req)
+        if(result.errors.length === 0){
+            const {token, admin, code, status} = req.query
+
+            if(status == "onhold"){
+                historyService(req, res, code, status)
+            }else if(status == "complete"){
+                historyService(req, res, code, status)
+            }else if(status == "confirm"){
+                historyService(req, res, code, status)
+            }else if(status == "cancel"){
+                historyService(req, res, code, status)
+            }else{
+                return res.json({code: 3, message: "This method is not support"})
+            }
         }else{
-            rechargeCancel(req, res, code, status)
+            let messages = result.mapped()
+            let message = ''
+            for(let m in messages){
+                message = messages[m]
+                break
+            }
+            return res.json({code: 1, message: message.msg})
         }
     }
+
 }
 
 module.exports = new UserController;
