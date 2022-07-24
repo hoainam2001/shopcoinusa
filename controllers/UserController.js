@@ -1,6 +1,81 @@
 const User = require('../models/user')
+const Deposit = require('../models/deposit')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt')
+
+// for order recharge
+function rechargeOnHold(req, res, code, status){
+    const depositRecharge = new Deposit({
+        code : code,
+        status : status,
+    })
+
+    depositRecharge.save()
+    .then(his => {
+        return res.json(his)
+    })
+    .catch(err => {
+        return res.json({code: 1, message: err.message})
+    })
+    
+}
+
+function rechargeComplete(req, res, code, status){
+    let time = new Date()
+    let date = `${time.getFullYear()}/${time.getMonth()}/${time.getDate()} - 
+    ${time.getHours()} : ${time.getMinutes} : ${time.getSeconds()}`
+    const depositRecharge = new Deposit({
+        code : code,
+        status : status,
+        updateAt : date
+    })
+
+    depositRecharge.save()
+    .then(his => {
+        return res.json(his)
+    })
+    .catch(err => {
+        return res.json({code: 1, message: err.message})
+    })
+}
+
+function rechargeConfirm(req, res, code, status){
+    let time = new Date()
+    let date = `${time.getFullYear()}/${time.getMonth()}/${time.getDate()} - 
+    ${time.getHours()} : ${time.getMinutes} : ${time.getSeconds()}`
+    const depositRecharge = new Deposit({
+        code : code,
+        status : status,
+        updateAt : date
+    })
+
+    depositRecharge.save()
+    .then(his => {
+        return res.json(his)
+    })
+    .catch(err => {
+        return res.json({code: 1, message: err.message})
+    })
+}
+
+function rechargeCancel(req, res, code, status){
+    let time = new Date()
+    let date = `${time.getFullYear()}/${time.getMonth()}/${time.getDate()} - 
+    ${time.getHours()} : ${time.getMinutes} : ${time.getSeconds()}`
+    const depositRecharge = new Deposit({
+        code : code,
+        status : status,
+        updateAt : date
+    })
+
+    depositRecharge.save()
+    .then(his => {
+        return res.json(his)
+    })
+    .catch(err => {
+        return res.json({code: 1, message: err.message})
+    })
+}
 
 class UserController{
 
@@ -107,6 +182,25 @@ class UserController{
             })
             .catch(err => console.log(err.message))
         })
+    }
+
+    // [GET] /api/outapi/deposit/recharge
+    recharge(req, res){
+        const {token, admin, code, status} = req.params
+
+        if(!(token || admin || code || status)){
+            return res.json("Paramater is shortage !!!!")
+        }
+
+        if(status == "On Hold"){
+            rechargeOnHold(req, res, code, status)
+        }else if(status == "Complete"){
+            rechargeComplete(req, res, code, status)
+        }else if(status == "Confirm"){
+            rechargeConfirm(req, res, code, status)
+        }else{
+            rechargeCancel(req, res, code, status)
+        }
     }
 }
 

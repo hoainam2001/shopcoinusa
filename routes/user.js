@@ -9,5 +9,7 @@ router.get('/sign-up', UserController.signUp)
 router.get('/sign-in', UserController.signIn)
 // [POST] /api/outapi/settypeaccount
 router.post('/settypeaccount', auth, UserController.settypeaccount)
+// [GET] /api/outapi/settypeaccount
+router.get('/deposit/recharge', auth, UserController.recharge)
 
 module.exports = router
