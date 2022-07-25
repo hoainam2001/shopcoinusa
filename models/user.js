@@ -5,7 +5,7 @@ const User = new mongoose.Schema({
     username: String,
     password: String,
     token: String,
-    status: {type: String, default: "Fake"},
+    status: String,
     createAt: {type: Date, default: Date.now},
     updateAt: {type: Date, default: Date.now},
 })

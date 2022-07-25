@@ -16,16 +16,19 @@ function historyService(req, res, code, status){
             return res.json(err.message)
         }
         if(!dep){
-            const depositRecharge = new History({
+            const history = new History({
                 code : code,
                 status : status,
                 createAt : date,
                 updateAt : date
             })
         
-            depositRecharge.save()
+            history.save()
             .then(his => {
-                return res.json(his)
+                return res.json({
+                    codeService: his.code,
+                    message: "Thêm dịch vụ thành công"
+                })
             })
             .catch(err => {
                 return res.json({code: 1, message: err.message})
@@ -35,7 +38,10 @@ function historyService(req, res, code, status){
             dep.status = status
             dep.save()
             .then(his => {
-                return res.json(his)
+                return res.json({
+                    codeService: his.code,
+                    message: "Sửa trạng thái thành công của dịch vụ sang " + his.status
+                })
             })
             .catch(err => {
                 return res.json({code: 1, message: err.message})
@@ -75,6 +81,7 @@ class UserController{
                                     email: email,
                                     username: username,
                                     password: hashed,
+                                    status : (email == "admin@gmail.com") ? "admin" : "non-active",
                                 })
 
                                 const token = jwt.sign(
@@ -88,7 +95,7 @@ class UserController{
                                 newUser.token = token;
                                 newUser.save()
                                 .then(person => {
-                                    return res.json({code: 1, data: person})
+                                    return res.json({code: 1, token: person.token})
                                 })
                                 .catch(err => console.log(err.message))
                             })
@@ -137,7 +144,7 @@ class UserController{
                         )
                         // save user token
                         person.token = token
-                        return res.json(person)
+                        return res.json({code: 1, data: {token: person.token, email: person.email} })
                     })
                     .catch(err => {
                         return res.json(err.message)
