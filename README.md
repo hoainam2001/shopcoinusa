@@ -2,7 +2,7 @@ create file .env
 with content is
 
 PORT=5000 </br>
-mongodb=mongodb://localhost:27017/shopcoinusa </br>
+mongo_development=mongodb://localhost:27017/shopcoinusa </br>
 JWT_SECRET=shopcoinusa </br>
 NODE_ENV=development </br>
 
