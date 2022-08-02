@@ -28,5 +28,5 @@ db.once("open", function () {
 
 app.use("/api/outapi/", userRouter)
 
-let port = process.env.PORT
+let port = process.env.PORT || 3000
 app.listen(port, () => console.log("http://localhost:"+port))
