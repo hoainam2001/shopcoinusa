@@ -10,8 +10,8 @@ const checkSignIn = require('./validator/checkSignIn')
 const checkSetTypeUser = require('./validator/checkSetTypeUser')
 const checkServices = require('./validator/checkServices')
 
-// [GET] /api/outapi/sign-up
-router.get('/sign-up', checkSignUp, UserController.signUp)
+// [POST] /api/outapi/sign-up
+router.post('/sign-up', checkSignUp, UserController.signUp)
 // [GET] /api/outapi/sign-in
 router.get('/sign-in', checkSignIn, UserController.signIn)
 // [POST] /api/outapi/settypeaccount

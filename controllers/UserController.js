@@ -53,13 +53,13 @@ function historyService(req, res, code, status){
 
 class UserController{
 
-    // [GET] /api/outapi/sign-up
+    // [POST] /api/outapi/sign-up
     signUp(req, res){
-
+        
         let result = validationResult(req)
         if(result.errors.length === 0){
-            const {username, email, password} = req.query
-        
+            const {username, email, password} = req.body
+            console.log(username, email, password)    
             User.findOne({email: email}, (err, user) => {
                 if(err){
                     return res.json({code: 1, message: err.message})
@@ -167,7 +167,23 @@ class UserController{
 
         let result = validationResult(req)
         if(result.errors.length === 0){
+            const {token, admin, user, status} = req.body
+            const query = {'email': user};
+            User.findOne(query, (err, person) => {
+                if(err){
+                    return res.json(err.message)
+                }else if(!person){
+                    return res.json("User is not exists")
+                }
 
+                person.status = status
+                person.updateAt = new Date()
+                person.save()
+                .then(p => {
+                    return res.json({code: 1, data: p})
+                })
+                .catch(err => console.log(err.message))
+            })
         }else{
             let messages = result.mapped()
             let message = ''
@@ -178,23 +194,7 @@ class UserController{
             return res.json({code: 1, message: message.msg})
         }
 
-        const {token, admin, user, status} = req.body
-        const query = {'email': user};
-        User.findOne(query, (err, person) => {
-            if(err){
-                return res.json(err.message)
-            }else if(!person){
-                return res.json("User is not exists")
-            }
-
-            person.status = status
-            person.updateAt = new Date()
-            person.save()
-            .then(p => {
-                return res.json({code: 1, data: p})
-            })
-            .catch(err => console.log(err.message))
-        })
+        
     }
 
     // [GET] /api/outapi/deposit/

@@ -14,6 +14,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 switch(process.env.NODE_ENV){
     case 'product':
         // for product
+        mongoose.connect(process.env.mongo_product)
         break
     case 'development':
         mongoose.connect(process.env.mongo_development)
